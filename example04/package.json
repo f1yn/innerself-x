@@ -1,0 +1,11 @@
+{
+  "name": "example04",
+  "private": true,
+  "scripts": {
+    "start": "parcel serve index.html",
+    "build": "parcel build index.html"
+  },
+  "devDependencies": {
+    "parcel-bundler": "^1.12.3"
+  }
+}
