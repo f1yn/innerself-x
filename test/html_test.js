@@ -62,6 +62,8 @@ suite("html", function() {
         assert.equal(output(), "Foo 0");
     });
 
+    // see render test for HTMLElement injection
+
     test("a true predicate", function() {
         const output = html`Foo ${true && "Bar"}`;
         assert.equal(output(), "Foo Bar");

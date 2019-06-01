@@ -1,6 +1,6 @@
 require = require("esm")(module);
 const assert = require("assert");
-const { createStore } = require("../index")
+const { createStore, html } = require("../index")
 
 function counter(state = 0, action) {
     switch (action) {
@@ -31,6 +31,37 @@ suite("render", function() {
 
         dispatch("INCREMENT");
         assert.equal(getMount(root).innerHTML, "Foo");
+    });
+
+    test("nested HTMLElement injection", function() {
+        const { attach } = store;
+
+         const TestApp = () => html`<div>Foo ${({ asNode }) => {
+            const [ref, b] = asNode(document.createElement('b'));
+            b.innerHTML = 'hello world';
+            return ref;
+        }} Baz</div>`;
+
+        attach(TestApp, root);
+        assert.equal(getMount(root).innerHTML, "<div>Foo <b>hello world</b> Baz</div>");
+    });
+
+     test("nested DocumentFragment injection", function() {
+        const { attach } = store;
+
+         const TestApp = () => html`<div>Foo ${({ asNode }) => {
+            const [ref, fragment] = asNode(document.createDocumentFragment());
+            // build buttons with internal state
+            for (let count = 0; count < 3; count++) {
+                const button = document.createElement('b');
+                button.innerHTML = `${count + 1}`;
+                fragment.appendChild(button);
+            }
+            return ref;
+        }} Baz</div>`;
+
+        attach(TestApp, root);
+        assert.equal(getMount(root).innerHTML, "<div>Foo <b>1</b><b>2</b><b>3</b> Baz</div>");
     });
 
     test("re-assigns when the output changes", function() {
