@@ -38,6 +38,27 @@ function App() {
 					return ref;
 				}}
 			</button>
+			<div>
+				${({ asNode }) => {
+					// fragment example (temporal)
+					const [ref, fragment, isFirstRender] = asNode(document.createDocumentFragment());
+
+					// build buttons with internal state
+					for (let count = 0; count < 3; count++) {
+						const button = document.createElement('button');
+						button.innerHTML = `Button ${count + 1}`;
+						button.addEventListener('click', () => {
+							console.log(`You clicked me! I am button ${count}`);
+						});
+
+						// append the node to the document fragment
+						fragment.appendChild(button);
+					}
+
+					// otherwise return string ref since the Node will persist with it's first set state
+					return ref;
+				}}
+			</div>
 		</div>
 	`;
 }

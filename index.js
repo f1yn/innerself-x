@@ -74,7 +74,7 @@ export function createStore(reducer) {
                 prevs.set(root, output);
 
                 // because we are performing dark art, lets create a new element root
-                // to work within so we can run DOM operations on a subset. This is aworking
+                // to work within so we can run DOM operations on a subset. This is a working
                 // DOM tree by the time we get to it
                 const mountPoint = document.createElement('div');
                 mountPoint.innerHTML = output;
@@ -91,8 +91,10 @@ export function createStore(reducer) {
 
                     if (!realNode) {
                         // something ain't right here, make sure to log it
+                        // clear the temp node as well
                         console.warn(`innerself-x reconciliation error, could not locate node with key: ${key}`);
-                        return;
+                        transitorySubRoots.delete(key) || persistentSubRoots.delete(key);
+                        continue;
                     }
 
                     // replace the temporary node with the real DOM node (either cached or live)
