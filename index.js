@@ -30,8 +30,17 @@ export function html([first, ...strings], ...values) {
     return function reconcile(rootProps) {
         // generate a node functionality or directly depending on it's type
         // allows for a shallow cascade via recursion
-        const generate = node => typeof node === 'function' ? node(rootProps) : node;
-        
+        const generate = (node) => {
+            if (Array.isArray(node)) {
+                // handle nested node arrays (due to reconciler)
+                // make sure once the recursion is done to attempt to map it out
+                // to a final string value
+                return node.map(generate).join('');
+            }
+            
+            return typeof node === 'function' ? node(rootProps) : node;
+        }
+
         return values.reduce(
             (acc, cur) => acc.concat(generate(cur), strings.shift()),
             [first])
@@ -82,14 +91,14 @@ export function createStore(reducer) {
                 // we'll now select all the sub-roots within the document and attempt to
                 // mount them where they exist
                 const tempSubRoots = mountPoint.getElementsByClassName('__data-innerself-node');
-                let index = tempSubRoots.length, tempNode, key;
+                let index = tempSubRoots.length, tempNode, key, targetNode;
 
                 while (index--) {
                     tempNode = tempSubRoots[index];
                     key = tempNode.className.split(' ', 1)[0];
-                    const realNode = transitorySubRoots.get(key) || persistentSubRoots.get(key);
+                    targetNode = transitorySubRoots.get(key) || persistentSubRoots.get(key);
 
-                    if (!realNode) {
+                    if (!targetNode) {
                         // something ain't right here, make sure to log it
                         // clear the temp node as well
                         console.warn(`innerself-x reconciliation error, could not locate node with key: ${key}`);
@@ -98,7 +107,7 @@ export function createStore(reducer) {
                     }
 
                     // replace the temporary node with the real DOM node (either cached or live)
-                    tempNode.parentNode.replaceChild(realNode, tempNode);
+                    tempNode.parentNode.replaceChild(targetNode, tempNode);
                 }
 
                 if (root.firstChild) {
