@@ -2,14 +2,18 @@
   <a href="#">
     <img width="192" height="192" src="https://raw.githubusercontent.com/stasm/innerself/master/logo/logo.png" />
   </a>
-  <h1>innerself</h1>
+  <h1>innerself-x</h1>
   <p>
-    <a href="https://travis-ci.org/stasm/innerself">
-      <img alt="Build Status" src="https://travis-ci.org/stasm/innerself.svg?branch=master" />
+    <a href="https://travis-ci.org/flynnham/innerself-x">
+      <img alt="Build Status" src="https://travis-ci.org/flynnham/innerself-x.svg?branch=master" />
     </a>
   </p>
   <p>A tiny view + state management solution using <code>innerHTML</code>.</p>
 </div>
+
+*This is a fork containing experimental features*
+
+---
 
 [`innerHTML` is fast][quirksmode].  It's not fast enough if you're a Fortune 500 company
 or even if your app has more than just a handful of views.  But it might be
