@@ -1,6 +1,8 @@
 import { createStore, html } from '../index'; // import innerself
 import withLogger from '../logger'; // import innerself/logger
 
+import FancyButton from './components/FancyButton';
+
 const { attach, dispatch } = createStore(withLogger(() => null));
 
 function App() {
@@ -58,6 +60,9 @@ function App() {
 					// otherwise return string ref since the Node will persist with it's first set state
 					return ref;
 				}}
+			</div>
+			<div>
+				${FancyButton}
 			</div>
 		</div>
 	`;

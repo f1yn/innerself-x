@@ -1,6 +1,7 @@
 require = require("esm")(module);
 const assert = require("assert");
 const { createStore, html } = require("../index")
+const { element, fragment } = require("../x");
 
 function counter(state = 0, action) {
     switch (action) {
@@ -62,6 +63,19 @@ suite("render", function() {
 
         attach(TestApp, root);
         assert.equal(getMount(root).innerHTML, "<div>Foo <b>1</b><b>2</b><b>3</b> Baz</div>");
+    });
+
+    test("nested x/element injection", function() {
+        const { attach } = store;
+
+        const Bold = element('b', (b) => {
+            b.innerHTML = 'Hello';
+        });
+
+        const TestApp = () => html`<div>Foo ${Bold} Baz</div>`;
+        attach(TestApp, root)
+
+        assert.equal(getMount(root).innerHTML, "<div>Foo <b>Hello</b> Baz</div>");
     });
 
     test("re-assigns when the output changes", function() {
