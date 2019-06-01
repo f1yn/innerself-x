@@ -14,7 +14,7 @@ global.CustomEvent = function CustomEvent(name, {detail}) {
     this.detail = detail;
 }
 
-global.spyFunction = function(orig = x => void x) {
+global.spyFunction = function(orig = x => y => void x) {
     let _args = [];
 
     function fake(...args) {
@@ -26,18 +26,8 @@ global.spyFunction = function(orig = x => void x) {
     return fake;
 }
 
-global.mockElement = function() {
-    let _innerHTML = "";
-
-    return {
-        _dirty: new Map(),
-        set innerHTML(value) {
-            this._dirty.set("innerHTML", true);
-            _innerHTML = value;
-        },
-        get innerHTML() {
-            return _innerHTML;
-        },
-        dispatchEvent: spyFunction()
-    };
+global.mockElement = function(tagName = 'div') {
+    const elem = document.createElement(tagName)
+    elem.dispatchEvent = spyFunction();
+    return elem;
 }
