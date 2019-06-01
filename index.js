@@ -1,31 +1,24 @@
-
-const ROOT_ID = 'innerself-root';
-
-const generateId = () => Math.random().toString('16');
-
-const generateKeyNode = key => `<i data-innerself-id="${key}"></i>`;
+const generateKeyNode = key => `<i class="${key} __data-innerself-node"></i>`;
 
 export function asNode(documentNode, opts, transitorySubRoots, persistentSubRoots) {
     const persistKey = typeof opts.key === 'string' && opts.key;
-    // determine which space a node with (olr already exists in)
-    const subRoots = persistKey ? persistentSubRoots : transitorySubRoots;
 
     if (persistKey) {
-        if (subRoots.has(persistKey)) {
+        if (persistentSubRoots.has(persistKey)) {
             // return the cached DOM node reference and it's key (avoid recreation)
             // also destroy the passed documentNode because we're mean
             documentNode = null;
-            return [generateKeyNode(persistKey), subRoots.get(persistKey), false];
+            return [generateKeyNode(persistKey), persistentSubRoots.get(persistKey), false];
         }
 
         // otherwise set the generated node into memory and return
-        subRoots.set(persistKey, documentNode);
+        persistentSubRoots.set(persistKey, documentNode);
         return [generateKeyNode(persistKey), documentNode, true];
     }
 
     // otherwise treat as standard ethereal (temp) node
-    const temporalKey = generateId();
-    subRoots.set(temporalKey, documentNode);
+    const temporalKey = Math.random().toString('16');
+    transitorySubRoots.set(temporalKey, documentNode);
     return [generateKeyNode(temporalKey), documentNode, true];
 }
 
@@ -37,12 +30,7 @@ export function html([first, ...strings], ...values) {
     return function reconcile(rootProps) {
         // generate a node functionality or directly depending on it's type
         // allows for a shallow cascade via recursion
-        const generate = node => {
-            if (typeof node === 'function') {
-                return node(rootProps);
-            }
-            return node;
-        }
+        const generate = node => typeof node === 'function' ? node(rootProps) : node;
         
         return values.reduce(
             (acc, cur) => acc.concat(generate(cur), strings.shift()),
@@ -61,7 +49,7 @@ export function createStore(reducer) {
     const roots = new Map();
     const prevs = new Map();
 
-    // storage for persistent subroots
+    // storage for persistent sub roots
     const persistentSubRoots  = new Map();
 
     function render() {
@@ -86,35 +74,37 @@ export function createStore(reducer) {
                 prevs.set(root, output);
 
                 // because we are performing dark art, lets create a new element root
-                // to work within so we can run DOM operations on a subset
-                const newSubRoot = document.createElement('div');
-                newSubRoot.setAttribute(ROOT_ID, true);
-                newSubRoot.innerHTML = output;
+                // to work within so we can run DOM operations on a subset. This is aworking
+                // DOM tree by the time we get to it
+                const mountPoint = document.createElement('div');
+                mountPoint.innerHTML = output;
 
-                // get all sub-nodes with expected virtual keys
-                // inject the nodes as they exist
-                newSubRoot.querySelectorAll('i[data-innerself-id]').forEach((tempNode) => {
-                    const key = tempNode.dataset.innerselfId;
+                // we'll now select all the sub-roots within the document and attempt to
+                // mount them where they exist
+                const tempSubRoots = mountPoint.getElementsByClassName('__data-innerself-node');
+                let index = tempSubRoots.length, tempNode, key;
+
+                while (index--) {
+                    tempNode = tempSubRoots[index];
+                    key = tempNode.className.split(' ', 1)[0];
                     const realNode = transitorySubRoots.get(key) || persistentSubRoots.get(key);
 
                     if (!realNode) {
                         // something ain't right here, make sure to log it
-                        console.warning(`innerself-x reconciliation error, could not locate node with key: ${key}`);
+                        console.warn(`innerself-x reconciliation error, could not locate node with key: ${key}`);
                         return;
                     }
 
                     // replace the temporary node with the real DOM node (either cached or live)
                     tempNode.parentNode.replaceChild(realNode, tempNode);
-                });
+                }
 
-                const existingSubRoot = root.querySelector(`div[${ROOT_ID}]`);
-
-                if (existingSubRoot) {
+                if (root.firstChild) {
                     // if we already have a mounted subRoot then replace it with our new one
-                    root.replaceChild(newSubRoot, existingSubRoot);
+                    root.replaceChild(mountPoint, root.firstChild);
                 } else {
                     // simply append the new root
-                    root.appendChild(newSubRoot);
+                    root.appendChild(mountPoint);
                 }
 
                 // Dispatch an event on the root to give developers a chance to
