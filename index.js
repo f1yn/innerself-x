@@ -1,5 +1,7 @@
 const generateKeyNode = key => `<i class="${key} __data-innerself-node"></i>`;
 
+const isFullString = x => x && x !== true || x === 0;
+
 export function asNode(documentNode, opts, transitorySubRoots, persistentSubRoots) {
     const persistKey = typeof opts.key === 'string' && opts.key;
 
@@ -35,7 +37,10 @@ export function html([first, ...strings], ...values) {
                 // handle nested node arrays (due to reconciler)
                 // make sure once the recursion is done to attempt to map it out
                 // to a final string value
-                return node.map(generate).join('');
+                return node
+                    .map(generate)
+                    .filter(isFullString)
+                    .join('');
             }
             
             return typeof node === 'function' ? node(rootProps) : node;
@@ -45,7 +50,7 @@ export function html([first, ...strings], ...values) {
             (acc, cur) => acc.concat(generate(cur), strings.shift()),
             [first])
             // Filter out interpolations which are bools, null or undefined.
-            .filter(x => x && x !== true || x === 0)
+            .filter(isFullString)
             .join('');
     }
 }
