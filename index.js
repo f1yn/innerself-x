@@ -84,51 +84,54 @@ export function createStore(reducer) {
 			// with the last output for this root.  Don't trust the current
 			// value of root.innerHTML as it may have been changed by other
 			// scripts or extensions.
-			if (output !== prevs.get(root)) {
-				prevs.set(root, output);
-
-				// because we are performing dark art, lets create a new element root
-				// to work within so we can run DOM operations on a subset. This is a working
-				// DOM tree by the time we get to it
-				const mountPoint = document.createElement('div');
-				mountPoint.innerHTML = output;
-
-				// we'll now select all the sub-roots within the document and attempt to
-				// mount them where they exist
-				const tempSubRoots = mountPoint.getElementsByClassName('__data-innerself-node');
-				let index = tempSubRoots.length, tempNode, key, targetNode;
-
-				while (index--) {
-					tempNode = tempSubRoots[index];
-					key = tempNode.className.split(' ', 1)[0];
-					targetNode = transitorySubRoots.get(key) || persistentSubRoots.get(key);
-
-					if (!targetNode) {
-						// something ain't right here, make sure to log it
-						// clear the temp node as well
-						console.warn(`innerself-x reconciliation error, could not locate node with key: ${key}`);
-						transitorySubRoots.delete(key) || persistentSubRoots.delete(key);
-						continue;
-					}
-
-					// replace the temporary node with the real DOM node (either cached or live)
-					tempNode.parentNode.replaceChild(targetNode, tempNode);
-				}
-
-				if (root.firstChild) {
-					// if we already have a mounted subRoot then replace it with our new one
-					root.replaceChild(mountPoint, root.firstChild);
-				} else {
-					// simply append the new root
-					root.appendChild(mountPoint);
-				}
-
-				// Dispatch an event on the root to give developers a chance to
-				// do some housekeeping after the whole DOM is replaced under
-				// the root. You can re-focus elements in the listener to this
-				// event. See example03.
-				root.dispatchEvent(new CustomEvent('render', { detail: state }));
+			if (output === prevs.get(root)) {
+				// skip iteration
+				continue;
 			}
+
+			prevs.set(root, output);
+
+			// because we are performing dark art, lets create a new element root
+			// to work within so we can run DOM operations on a subset. This is a working
+			// DOM tree by the time we get to it
+			const mountPoint = document.createElement('div');
+			mountPoint.innerHTML = output;
+
+			// we'll now select all the sub-roots within the document and attempt to
+			// mount them where they exist
+			const tempSubRoots = mountPoint.getElementsByClassName('__data-innerself-node');
+			let index = tempSubRoots.length, tempNode, key, targetNode;
+
+			while (index--) {
+				tempNode = tempSubRoots[index];
+				key = tempNode.className.split(' ', 1)[0];
+				targetNode = transitorySubRoots.get(key) || persistentSubRoots.get(key);
+
+				if (!targetNode) {
+					// something ain't right here, make sure to log it
+					// clear the temp node as well
+					console.warn(`innerself-x reconciliation error, could not locate node with key: ${key}`);
+					transitorySubRoots.delete(key) || persistentSubRoots.delete(key);
+					continue;
+				}
+
+				// replace the temporary node with the real DOM node (either cached or live)
+				tempNode.parentNode.replaceChild(targetNode, tempNode);
+			}
+
+			if (root.firstChild) {
+				// if we already have a mounted subRoot then replace it with our new one
+				root.replaceChild(mountPoint, root.firstChild);
+			} else {
+				// simply append the new root
+				root.appendChild(mountPoint);
+			}
+
+			// Dispatch an event on the root to give developers a chance to
+			// do some housekeeping after the whole DOM is replaced under
+			// the root. You can re-focus elements in the listener to this
+			// event. See example03.
+			root.dispatchEvent(new CustomEvent('render', { detail: state }));
 		}
 	};
 
